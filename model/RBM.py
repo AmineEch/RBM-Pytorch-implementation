@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import torch.nn.functional as Func
 from torch.distributions.bernoulli import Bernoulli as B
 
 class RBM(nn.Module):
@@ -26,7 +26,9 @@ class RBM(nn.Module):
         '''
         F = - self.params[1].matmul(x) - nn.Softplus()(self.params[0].matmul(x).add_(self.params[2])).sum()
         E = - self.params[1].matmul(x_t) - self.params[2].matmul(h_t) - h_t.matmul(self.params[0].matmul(x_t))
-        loss = F - E
+        loss = F - E + 0.0005 * (Func.mse_loss(self.params[0], torch.zeros_like(self.params[0]))
+                                 + Func.mse_loss(self.params[1], torch.zeros_like(self.params[1]))
+                                 + Func.mse_loss(self.params[2], torch.zeros_like(self.params[2])) )
         return loss
 
     def sample_h_knowing_x(self, x):
@@ -35,7 +37,7 @@ class RBM(nn.Module):
         :param x:
         :return: h
         '''
-        probs = F.sigmoid(self.params[2] + self.params[0].matmul(x))
+        probs = Func.sigmoid(self.params[2] + self.params[0].matmul(x))
         h = B(probs).sample()
         return h
 
@@ -44,7 +46,7 @@ class RBM(nn.Module):
         :param h:
         :return: x
         '''
-        probs = F.sigmoid(self.params[1] + h.matmul(self.params[0]))
+        probs = Func.sigmoid(self.params[1] + h.matmul(self.params[0]))
         x = B(probs).sample()
         return x
 

@@ -2,11 +2,13 @@ from model.RBM import *
 from data.load_data import load_mnistdataloader
 import torch.optim as optim
 from tensorboardX import SummaryWriter
+import numpy as np
 
 # Directories
 
 dataset_dir = './data/data'
 model_dir = './checkpoints'
+weights_dir = './data/weights'
 # global values
 
 n_v = 784
@@ -29,6 +31,7 @@ mnist = load_mnistdataloader(dataset_dir)
 def train_fn():
     global_step = 0
     for k in range(num_epochs):
+        print("[*] Epoch : ",k)
         for i, batch in enumerate(mnist):
             batch[0] = batch[0].view([batch[0].shape[0], -1])
             err_l2 = 0
@@ -42,7 +45,7 @@ def train_fn():
                 else:
                     x_t, h_t = rbm.gibbs_sampling(gibbs_itter, x_t, h_t)
                 err_l2 += torch.norm(x_t - x)
-                err_CE += F.binary_cross_entropy(x_t,x)
+                err_CE += Func.binary_cross_entropy(x_t,x)
                 loss = rbm.forward(x, x_t, h_t)
                 loss.backward()
 
@@ -56,7 +59,10 @@ def train_fn():
             writer.add_image('sample', x.view([1,1,28,28]), global_step)
             writer.add_image('reconstruction', x_t.view([1,1,28,28]),global_step)
             writer.add_histogram('weights',rbm.params[0],global_step)
+            writer.add_histogram('bias v', rbm.params[1], global_step)
+            writer.add_histogram('bias h', rbm.params[2], global_step)
             global_step += 1
+    rbm.save_state_dict(weights_dir+'/rbm_state.pt')
 
 if __name__ == '__main__':
     train_fn()
