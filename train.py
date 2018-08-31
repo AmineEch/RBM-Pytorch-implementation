@@ -30,7 +30,7 @@ def train_fn():
     global_step = 0
     for k in range(num_epochs):
         for i, batch in enumerate(mnist):
-            batch[0] = batch[0].view([batch_size, -1])
+            batch[0] = batch[0].view([batch[0].shape[0], -1])
             err_l2 = 0
             err_CE = 0
             for j in range(batch[0].shape[0]):
